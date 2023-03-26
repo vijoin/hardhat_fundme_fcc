@@ -13,6 +13,9 @@ contract FundMe {
     AggregatorV3Interface internal priceFeed;
     uint256 public minimumUsd = 50 * 1e18;
 
+    address[] public funders;
+    mapping(address => uint256) public addressToAmount;
+
     constructor() {
         owner = msg.sender;
         priceFeed = AggregatorV3Interface(
@@ -24,7 +27,9 @@ contract FundMe {
         // want to be able to set a minimum fund amount in USD
         // 1. How do we send ETH to this contract?
         require(getConversionRate(msg.value) > minimumUsd, "Didn't send enough!");
-    }
+        funders.push(msg.sender);
+        addressToAmount[msg.sender] += msg.value;
+     }
 
     function getPrice() public view returns (uint256) {
         (,int price,,,) = priceFeed.latestRoundData();
@@ -36,6 +41,10 @@ contract FundMe {
         uint256 ethAmountInUsd = (ethPrice * ethAmount) / 1e18;
 
         return ethAmountInUsd;
+    }
+
+    function getAllFunders() public view returns (address[] memory){
+        return funders;
     }
 }
 

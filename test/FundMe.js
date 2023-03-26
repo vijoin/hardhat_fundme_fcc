@@ -44,6 +44,23 @@ describe("FundMe", function () {
         expect(await ethers.provider.getBalance(fundme.address)).to.equal(ethAmount);
     }
     );
+    it("Funders are recorded", async function () {
+        const { fundme, owner, funder1 } = await loadFixture(deployFixture);
+
+        const ethAmount = ethers.utils.parseEther("0.029");
+        await fundme.fund({ value: ethAmount });
+        await fundme.connect(funder1).fund({ value: ethAmount });
+        expect(await fundme.getAllFunders()).to.deep.equal([owner.address, funder1.address]);
+    });
+
+    it("Funders' contributions are recorded", async function () {
+        const { fundme, owner, funder1 } = await loadFixture(deployFixture);
+
+        const ethAmount = ethers.utils.parseEther("0.029");
+        await fundme.connect(funder1).fund({ value: ethAmount });
+        await fundme.connect(funder1).fund({ value: ethAmount });
+        expect(await fundme.addressToAmount(funder1.address)).to.equal(ethAmount.mul(2));
+    });
 
     describe("Test price feed aggregator", function () {
      it("Test Latest Price according to blockNumber 3162520", async function () {
