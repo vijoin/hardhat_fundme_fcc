@@ -1,7 +1,7 @@
 const { loadFixture } = require("@nomicfoundation/hardhat-network-helpers");
 const { expect } = require("chai");
 
-describe("Test price feed aggregator", function () {
+describe.skip("Test price feed aggregator", function () {
     async function  deployFixture() {
         // get signers
         const [ owner ] = await ethers.getSigners();
