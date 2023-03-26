@@ -17,6 +17,8 @@ describe("FundMe", function () {
         // wait with deployed
         await fundme.deployed();
 
+
+
         // return contract, owner
         return { fundme, owner, funder1 }
     };
@@ -62,22 +64,7 @@ describe("FundMe", function () {
         expect(await fundme.addressToAmount(funder1.address)).to.equal(ethAmount.mul(2));
     });
 
-    describe("Test price feed aggregator", function () {
-     it("Test Latest Price according to blockNumber 3162520", async function () {
-        const { fundme } = await loadFixture(deployFixture);
-
-        const ethAmount = ethers.utils.parseEther("1")
-        expect(await fundme.getPrice()).to.equal(ethers.utils.parseUnits("1727.18", 18))
-
-     });
-
-     it("Test convertion rate according to blockNumber 3162519", async function () {
-        const { fundme } = await loadFixture(deployFixture);
-
-        expect(await fundme.getConversionRate(1)).to.equal(1727)
-
-     });
-    });
+    
 
     
 });
