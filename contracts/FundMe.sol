@@ -13,14 +13,20 @@ contract FundMe is Ownable {
 
     uint256 public minimumUsd = 50 * 1e18;
 
+    AggregatorV3Interface priceFeed;
+
     address[] public funders;
     mapping(address => uint256) public addressToAmount;
+
+    constructor(address _priceFeedAddress){
+        priceFeed = AggregatorV3Interface(_priceFeedAddress);
+    }
 
     function fund() public payable {
         // want to be able to set a minimum fund amount in USD
         // 1. How do we send ETH to this contract?
         require(
-            msg.value.getConversionRate() > minimumUsd,
+            msg.value.getConversionRate(priceFeed) > minimumUsd,
             "Didn't send enough!"
         );
         funders.push(msg.sender);

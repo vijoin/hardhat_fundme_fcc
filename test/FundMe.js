@@ -13,7 +13,9 @@ describe("FundMe", function () {
         // get contract
         const FundMe = await ethers.getContractFactory("FundMe");
         // deploy
-        const fundme = await FundMe.deploy();
+        const fundme = await FundMe.deploy(
+            "0x694AA1769357215DE4FAC081bf1f309aDC325306", // Sepolia ETH / USD
+        );
         // wait with deployed
         await fundme.deployed();
 
