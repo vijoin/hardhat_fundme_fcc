@@ -6,7 +6,7 @@ async function main() {
   console.log("Account balance: ", (await deployer.getBalance()).toString());
 
   const FundMe = await ethers.getContractFactory("FundMe");
-  const fundMe = await FundMe.deploy("0x694AA1769357215DE4FAC081bf1f309aDC325306");
+  const fundMe = await FundMe.deploy("0x694AA1769357215DE4FAC081bf1f309aDC325306"); // SEPOLIA
 
   console.log("Contract address: ", fundMe.address);
 }
