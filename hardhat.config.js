@@ -8,13 +8,13 @@ const { SEPOLIA_APIKEY, SEPOLIA_PRIVATE_KEY, MUMBAI_APIKEY } = process.env;
 module.exports = {
   solidity: "0.8.18",
   networks: {
-    hardhat: {
-      forking: {
-        url: `https://eth-sepolia.g.alchemy.com/v2/${SEPOLIA_APIKEY}`,
-        blockNumber: 3162519,
-        chainId: 31337,
-      },
-    },
+    // hardhat: {
+    //   forking: {
+    //     url: `https://eth-sepolia.g.alchemy.com/v2/${SEPOLIA_APIKEY}`,
+    //     blockNumber: 3162519,
+    //     chainId: 31337,
+    //   },
+    // },
     sepolia: {
       url: `https://eth-sepolia.g.alchemy.com/v2/${SEPOLIA_APIKEY}`,
       accounts: [SEPOLIA_PRIVATE_KEY],
