@@ -27,4 +27,4 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     log: true,
   });
 };
-module.exports.tags = ["FundMe"];
+module.exports.tags = ["all", "FundMe"];

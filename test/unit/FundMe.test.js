@@ -5,37 +5,26 @@
 
 const { loadFixture } = require("@nomicfoundation/hardhat-network-helpers");
 const { expect } = require("chai");
-const { network } = require("hardhat");
-const { networkConfig } = require("../helper-hardhat-config");
+const { network, deployment, ether, getNamedAccounts } = require("hardhat");
+const { networkConfig } = require("../../helper-hardhat-config");
 
 describe("FundMe", function () {
   async function deployFixture() {
-    // get signers
-    const [owner, funder1, funder2] = await ethers.getSigners();
-    // get contract
-    const FundMe = await ethers.getContractFactory("FundMe");
-    // deploy
+    await deployments.fixture(["all"]);
 
-    const chainId = network.config.chainId;
-    console.log("chainId:", chainId)
+    const { deployer } = await getNamedAccounts();
 
-    const ethUsdPriceFeedAddress =
-      networkConfig[chainId]["ethUsdPriceFeedAddress"];
+    fundme = await ethers.getContract("FundMe", deployer);
 
-    const fundme = await FundMe.deploy(
-      ethUsdPriceFeedAddress
-    );
-    // wait with deployed
-    await fundme.deployed();
+    const [, funder1, funder2] = await ethers.getSigners();
 
-    // return contract, owner
-    return { fundme, owner, funder1, funder2 };
+    return { fundme, deployer, funder1, funder2 };
   }
 
   it("Sender is the Owner of deployed contract ", async function () {
-    const { fundme, owner } = await loadFixture(deployFixture);
+    const { fundme, deployer } = await loadFixture(deployFixture);
 
-    expect(await fundme.owner()).to.equal(owner.address);
+    expect(await fundme.owner()).to.equal(deployer);
   });
 
   it("Txn reverted with message if not enough amount funded", async function () {
@@ -56,46 +45,55 @@ describe("FundMe", function () {
     );
   });
   it("Funders are recorded", async function () {
-    const { fundme, owner, funder1 } = await loadFixture(deployFixture);
+    const { fundme, deployer, funder1 } = await loadFixture(deployFixture);
 
     const ethAmount = ethers.utils.parseEther("0.029");
     await fundme.fund({ value: ethAmount });
     await fundme.connect(funder1).fund({ value: ethAmount });
     expect(await fundme.getAllFunders()).to.deep.equal([
-      owner.address,
+      deployer,
       funder1.address,
     ]);
   });
 
   it("Funders' contributions are recorded", async function () {
-    const { fundme, owner, funder1 } = await loadFixture(deployFixture);
+    const { fundme, deployer, funder1 } = await loadFixture(deployFixture);
 
     const ethAmount = ethers.utils.parseEther("0.029");
     await fundme.connect(funder1).fund({ value: ethAmount });
     await fundme.connect(funder1).fund({ value: ethAmount });
-    expect(await fundme.addressToAmount(funder1.address)).to.equal(
+    expect(await fundme.getFundedAmountByAddress(funder1.address)).to.equal(
       ethAmount.mul(2)
     );
   });
 
   it("owner can withdraw funds", async function () {
-    const { fundme, owner, funder1 } = await loadFixture(deployFixture);
+    const { fundme, deployer, funder1 } = await loadFixture(deployFixture);
 
-    initialOwnerBalance = await ethers.provider.getBalance(owner.address);
+    initialOwnerBalance = await ethers.provider.getBalance(deployer);
     const ethAmount = ethers.utils.parseEther("0.029");
     await fundme.connect(funder1).fund({ value: ethAmount });
     await fundme.connect(funder1).fund({ value: ethAmount });
 
-    initialContractBalance = await ethers.provider.getBalance(fundme.address);
+    const initialContractBalance = await ethers.provider.getBalance(
+      fundme.address
+    );
     expect(initialContractBalance).to.equal(ethAmount.mul(2));
 
-    await fundme.withdraw();
+    const txn = await fundme.withdraw();
+    const txn_receipt = await txn.wait();
 
-    finalOwnerBalance = await ethers.provider.getBalance(owner.address);
-    finalContractBalance = await ethers.provider.getBalance(fundme.address);
+    const gasCost = txn_receipt.gasUsed.mul(txn_receipt.effectiveGasPrice);
 
-    // expect(finalOwnerBalance.add(gasUsed)).to.equal(initialOwnerBalance.add(ethAmount.mul(2)));
+    const finalOwnerBalance = await ethers.provider.getBalance(deployer);
+    const finalContractBalance = await ethers.provider.getBalance(
+      fundme.address
+    );
+
     expect(finalContractBalance).to.equal(0);
+    expect(finalOwnerBalance.add(gasCost)).to.equal(
+      initialOwnerBalance.add(initialContractBalance)
+    );
   });
 
   it("only owner can withdraw funds", async function () {
@@ -119,11 +117,21 @@ describe("FundMe", function () {
     await fundme.connect(funder2).fund({ value: ethAmount });
     await fundme.withdraw();
 
-    expect(await fundme.addressToAmount(funder1.address)).to.equal(
+    expect(await fundme.getFundedAmountByAddress(funder1.address)).to.equal(
       ethZeroAmount
     );
-    expect(await fundme.addressToAmount(funder2.address)).to.equal(
+    expect(await fundme.getFundedAmountByAddress(funder2.address)).to.equal(
       ethZeroAmount
     );
   });
+
+  // it("Ethers are sent via call function", async function() {
+  //   const { fundme, funder1 } = await loadFixture(deployFixture);
+
+  //   const ethAmount = ethers.utils.parseEther("0.029");
+  //   await fundme.connect(funder1).sendViaCall();
+
+  // });
+  it("Calling a non-exisiting function will capture funds anyway");
+  it("Sending funds without calling anything will capture them anyway");
 });
